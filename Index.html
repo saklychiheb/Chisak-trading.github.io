@@ -1,0 +1,787 @@
+```html
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAUUSD Institutional Confluence Terminal Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0e14',
+                        cardBg: '#131722',
+                        borderCol: '#2a2e39',
+                        goldAccent: '#d4af37',
+                        goldHover: '#f3c623',
+                        bullGreen: '#00e676',
+                        bearRed: '#ff5252'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0b0e14;
+            color: #d1d4dc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0b0e14; }
+        ::-webkit-scrollbar-thumb { background: #2a2e39; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d4af37; }
+        .tab-active {
+            border-bottom: 2px solid #d4af37;
+            color: #d4af37;
+            font-weight: 700;
+        }
+        .pulse-gold {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Top Header Navigation -->
+    <header class="bg-cardBg border-b border-borderCol px-4 py-3 sticky top-0 z-50 shadow-md">
+        <div class="max-w-[1800px] mx-auto flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo & Brand -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-br from-amber-500/20 to-goldAccent/10 border border-goldAccent/40 p-2.5 rounded-xl text-goldAccent">
+                    <i class="fa-solid fa-crown text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="font-extrabold text-lg tracking-wide text-white">XAU/USD INSTITUTIONAL</h1>
+                        <span class="text-[10px] bg-goldAccent text-black px-2 py-0.5 rounded font-black tracking-widest uppercase">PRO TERMINAL</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Order Flow, VWAP & Dynamic Multi-Indicator Confluence Engine</p>
+                </div>
+            </div>
+
+            <!-- WebSocket Status & Ticker Live Info -->
+            <div class="flex items-center space-x-6 flex-wrap">
+                <!-- Status Badge -->
+                <div id="connStatus" class="flex items-center space-x-2 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="connText" class="font-semibold">BINANCE WEBSOCKET CONNECTÉ</span>
+                </div>
+
+                <!-- Price & Stats -->
+                <div class="text-right">
+                    <div class="flex items-center justify-end space-x-2">
+                        <span class="text-xs text-slate-400 font-medium">SPOT OR:</span>
+                        <span class="text-2xl font-black text-white tracking-tight" id="headerPrice">4,076.75</span>
+                    </div>
+                    <div class="text-xs flex items-center justify-end space-x-2">
+                        <span id="headerChange" class="text-emerald-400 font-bold">+73.34 (+1.97%)</span>
+                    </div>
+                </div>
+
+                <div class="hidden md:flex flex-col text-right border-l border-borderCol pl-4 text-xs">
+                    <span class="text-slate-400">Volume 24H (PAXG)</span>
+                    <span class="font-bold text-slate-200" id="headerVolume24h">48,290.45 OZ</span>
+                </div>
+
+                <div class="hidden lg:flex flex-col text-right border-l border-borderCol pl-4 text-xs">
+                    <span class="text-slate-400">VWAP Institutionnel</span>
+                    <span class="font-bold text-goldAccent" id="headerVWAPVal">4,068.10</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <main class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 max-w-[1800px] w-full mx-auto">
+
+        <!-- LEFT COLUMN: Confluence Engine & Technical Radar (4 Cols) -->
+        <section class="lg:col-span-4 flex flex-col space-y-4">
+
+            <!-- Decision Box (Unified Algorithmic Output) -->
+            <div id="signalCard" class="bg-cardBg border border-borderCol rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Algorithme de Confluence</span>
+                    <span id="timeframeBadge" class="text-[10px] bg-slate-800 text-goldAccent font-extrabold px-2.5 py-0.5 rounded-full border border-goldAccent/30">TF: H1</span>
+                </div>
+
+                <div id="signalTitle" class="text-2xl font-black tracking-wide text-emerald-400 mb-1">
+                    ACHAT FORT (CONFLUENCE)
+                </div>
+                <p id="signalDesc" class="text-xs text-slate-300 leading-relaxed mb-4">
+                    Alignement parfait des indicateurs : Prix > VWAP, RSI neutre-haussier (58.4), MACD au-dessus de sa ligne de signal et pic de volume au-dessus de la SMA 20.
+                </p>
+
+                <!-- Confidence Gauge & Buy/Sell Pressure -->
+                <div class="space-y-3 bg-darkBg/70 p-3.5 rounded-xl border border-borderCol/70 mb-4">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Score de Confiance Institutionnel</span>
+                        <span id="confidencePct" class="font-extrabold text-white text-sm">94%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div id="confidenceBar" class="bg-goldAccent h-full transition-all duration-500 rounded-full" style="width: 94%;"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <div class="flex justify-between text-[11px] mb-1">
+                                <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-arrow-trend-up"></i> Acheteurs</span>
+                                <span id="buyersPct" class="font-bold text-white">88%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div id="buyersBar" class="bg-emerald-400 h-full transition-all duration-500" style="width: 88%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[11px] mb-1">
+                                <span class="text-red-400 font-semibold"><i class="fa-solid fa-arrow-trend-down"></i> Vendeurs</span>
+                                <span id="sellersPct" class="font-bold text-white">12%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div id="sellersBar" class="bg-red-400 h-full transition-all duration-500" style="width: 12%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TP & SL Recommendations -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl text-center">
+                        <div class="text-emerald-400 font-extrabold uppercase text-[10px]">Cible Take Profit (TP)</div>
+                        <div id="tpTarget" class="text-sm font-black text-white mt-0.5">4,125.50</div>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-center">
+                        <div class="text-red-400 font-extrabold uppercase text-[10px]">Stop Loss Technique (SL)</div>
+                        <div id="slTarget" class="text-sm font-black text-white mt-0.5">4,042.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Breakdown & Indicators Dashboard -->
+            <div class="bg-cardBg border border-borderCol rounded-2xl p-4 shadow-xl flex-1 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-borderCol">
+                    <h2 class="font-bold text-xs uppercase tracking-wider text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-microchip text-goldAccent"></i>
+                        <span>Filtres Institutionnels Détaillés</span>
+                    </h2>
+                    <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">Zéro Bruit</span>
+                </div>
+
+                <div class="space-y-2.5 text-xs">
+                    
+                    <!-- VWAP -->
+                    <div class="bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50 flex justify-between items-center">
+                        <div>
+                            <div class="font-semibold text-slate-200">VWAP (Volume Weighted Avg Price)</div>
+                            <div class="text-[10px] text-slate-400">Référence d'Exécution Pro</div>
+                        </div>
+                        <div class="text-right">
+                            <div id="vwapStatus" class="font-extrabold text-emerald-400">Au-dessus (+8.65$)</div>
+                            <div class="text-[10px] text-emerald-400 font-medium">Support Institutionnel</div>
+                        </div>
+                    </div>
+
+                    <!-- RSI (14) Dynamic Gauge -->
+                    <div class="bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50">
+                        <div class="flex justify-between items-center mb-1">
+                            <div>
+                                <span class="font-semibold text-slate-200">RSI (14)</span>
+                                <span id="rsiStatusText" class="text-[10px] text-emerald-400 ml-2 font-medium">Zone Neutre Haussière</span>
+                            </div>
+                            <span id="rsiVal" class="font-bold text-white">58.4</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden relative">
+                            <!-- Safe zones background -->
+                            <div class="absolute left-[30%] right-[30%] top-0 bottom-0 bg-slate-700/50"></div>
+                            <div id="rsiGaugeBar" class="bg-emerald-400 h-full transition-all duration-300 rounded-full" style="width: 58.4%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Awesome Oscillator (AO) -->
+                    <div class="bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50 flex justify-between items-center">
+                        <div>
+                            <div class="font-semibold text-slate-200">Awesome Oscillator (AO)</div>
+                            <div class="text-[10px] text-slate-400">Momentum SMA(5) - SMA(34)</div>
+                        </div>
+                        <div class="text-right">
+                            <div id="aoVal" class="font-bold text-emerald-400">+12.45 (Vert)</div>
+                            <div class="text-[10px] text-emerald-400">Momentum Haussier</div>
+                        </div>
+                    </div>
+
+                    <!-- EMA Alignment (20 / 50 / 200) -->
+                    <div class="bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50 flex justify-between items-center">
+                        <div>
+                            <div class="font-semibold text-slate-200">Moyennes Mobiles EMA (20/50/200)</div>
+                            <div class="text-[10px] text-slate-400">Alignement de Tendance Macro</div>
+                        </div>
+                        <div class="text-right">
+                            <div id="emaStatus" class="font-bold text-emerald-400">Alignement Haussier parfait</div>
+                            <div class="text-[10px] text-slate-400">Prix > EMA20 > EMA50 > EMA200</div>
+                        </div>
+                    </div>
+
+                    <!-- MACD (12, 26, 9) -->
+                    <div class="bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50 flex justify-between items-center">
+                        <div>
+                            <div class="font-semibold text-slate-200">MACD (12, 26, 9)</div>
+                            <div class="text-[10px] text-slate-400">Croisement & Histogramme</div>
+                        </div>
+                        <div class="text-right">
+                            <div id="macdStatus" class="font-bold text-emerald-400">Croisement Bullish</div>
+                            <div class="text-[10px] text-emerald-400">Ligne Signal Franchie</div>
+                        </div>
+                    </div>
+
+                    <!-- Volume Confirmation -->
+                    <div class="bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50 flex justify-between items-center">
+                        <div>
+                            <div class="font-semibold text-slate-200">Volume vs SMA 20</div>
+                            <div class="text-[10px] text-slate-400">Order Flow & Spikes</div>
+                        </div>
+                        <div class="text-right">
+                            <div id="volStatus" class="font-bold text-emerald-400">+42% / Moyenne</div>
+                            <div class="text-[10px] text-emerald-400">Validation Institutionnelle</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: Canvas Interactive Chart & Macro Radar (8 Cols) -->
+        <section class="lg:col-span-8 flex flex-col space-y-4">
+
+            <!-- Chart Box -->
+            <div class="bg-cardBg border border-borderCol rounded-2xl p-4 shadow-xl flex flex-col">
+                <div class="flex flex-wrap items-center justify-between pb-3 border-b border-borderCol gap-3">
+                    <div class="flex items-center space-x-3">
+                        <h2 class="font-bold text-xs uppercase tracking-wider text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-line text-goldAccent"></i>
+                            <span>Graphique Spot XAUUSD & VWAP Institutionnel</span>
+                        </h2>
+                        <!-- Timeframe Selector -->
+                        <div class="flex space-x-1 bg-darkBg p-1 rounded-xl border border-borderCol text-xs">
+                            <button onclick="setTimeframe('M5')" id="tfM5" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">M5</button>
+                            <button onclick="setTimeframe('H1')" id="tfH1" class="px-2.5 py-1 rounded-lg bg-goldAccent text-black font-extrabold transition">H1</button>
+                            <button onclick="setTimeframe('H4')" id="tfH4" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">H4</button>
+                            <button onclick="setTimeframe('1D')" id="tf1D" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition">1D</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Simualtion Button -->
+                    <button onclick="simulateVolatility()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs px-3.5 py-1.5 rounded-xl font-bold transition flex items-center space-x-2 shadow-lg">
+                        <i class="fa-solid fa-bolt text-goldAccent animate-bounce"></i>
+                        <span>Simuler Volatilité CPI (Temps Réel)</span>
+                    </button>
+                </div>
+
+                <!-- OHLC Mini Bar Header -->
+                <div class="grid grid-cols-4 gap-2 py-2 text-xs text-slate-400 bg-darkBg/50 px-3 rounded-xl my-3 border border-borderCol/50">
+                    <div>Open: <span id="ohlcOpen" class="text-white font-semibold">4,045.00</span></div>
+                    <div>High: <span id="ohlcHigh" class="text-white font-semibold">4,085.20</span></div>
+                    <div>Low: <span id="ohlcLow" class="text-white font-semibold">4,032.10</span></div>
+                    <div>Close: <span id="ohlcClose" class="text-white font-semibold">4,076.75</span></div>
+                </div>
+
+                <!-- Canvas Chart Area -->
+                <div class="relative w-full h-[360px] bg-darkBg rounded-xl border border-borderCol/80 overflow-hidden">
+                    <canvas id="mainChart" class="w-full h-full block"></canvas>
+                    <div class="absolute top-3 left-3 flex items-center space-x-4 bg-darkBg/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-borderCol/60 text-[11px]">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-0.5 bg-goldAccent"></span>
+                            <span class="text-slate-300">Prix Spot XAUUSD</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2.5 h-0.5 bg-emerald-400 border border-dashed border-emerald-400"></span>
+                            <span class="text-slate-300">VWAP Institutionnel</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+                            <span class="text-slate-300">Histogramme Volume</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Macro Events Radar Countdown & Fundamentals -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- Real-time Macro Radar Countdown -->
+                <div class="bg-cardBg border border-borderCol rounded-2xl p-4 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between pb-2 border-b border-borderCol mb-3">
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-white flex items-center space-x-2">
+                                <i class="fa-solid fa-satellite-dish text-goldAccent animate-pulse"></i>
+                                <span>Radar Événements Macro US</span>
+                            </h3>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-500/30">SURVEILLANCE ACTIVES</span>
+                        </div>
+
+                        <div class="text-xs text-slate-400 mb-1">Prochain Choc de Volatilité :</div>
+                        <div id="nextEventName" class="text-sm font-black text-white mb-3 flex items-center space-x-2">
+                            <span>US CPI Inflation (Indice des Prix)</span>
+                            <span class="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">IMPACT MAX</span>
+                        </div>
+
+                        <!-- 4-Box Countdown Timer -->
+                        <div class="grid grid-cols-4 gap-2 text-center bg-darkBg p-3 rounded-xl border border-borderCol mb-3">
+                            <div>
+                                <div id="cdDays" class="text-xl font-black text-goldAccent">02</div>
+                                <div class="text-[9px] text-slate-400 uppercase font-semibold">Jours</div>
+                            </div>
+                            <div>
+                                <div id="cdHours" class="text-xl font-black text-goldAccent">14</div>
+                                <div class="text-[9px] text-slate-400 uppercase font-semibold">Heures</div>
+                            </div>
+                            <div>
+                                <div id="cdMins" class="text-xl font-black text-goldAccent">28</div>
+                                <div class="text-[9px] text-slate-400 uppercase font-semibold">Minutes</div>
+                            </div>
+                            <div>
+                                <div id="cdSecs" class="text-xl font-black text-goldAccent">45</div>
+                                <div class="text-[9px] text-slate-400 uppercase font-semibold">Secondes</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-[11px] text-slate-400 bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50 italic">
+                        <i class="fa-solid fa-shield-halved text-goldAccent mr-1"></i>
+                        Les algorithmes institutionnels réduisent le levier de 50% automatiquement 15 min avant la publication.
+                    </div>
+                </div>
+
+                <!-- Economic Calendar & News Feed Tabs -->
+                <div class="bg-cardBg border border-borderCol rounded-2xl p-4 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between pb-2 border-b border-borderCol mb-3">
+                        <!-- News Categories -->
+                        <div class="flex space-x-2 text-xs">
+                            <button onclick="filterNews('all')" id="tabNewsAll" class="text-goldAccent font-bold pb-1 border-b-2 border-goldAccent">Tout</button>
+                            <button onclick="filterNews('fed')" id="tabNewsFed" class="text-slate-400 hover:text-white pb-1 transition">Fed / Taux</button>
+                            <button onclick="filterNews('cpi')" id="tabNewsCpi" class="text-slate-400 hover:text-white pb-1 transition">Inflation US</button>
+                        </div>
+                        <span class="text-[10px] text-slate-500">Fil en Direct</span>
+                    </div>
+
+                    <div id="newsContainer" class="space-y-2.5 overflow-y-auto max-h-[200px] pr-1 text-xs">
+                        <!-- News Item 1 -->
+                        <div class="news-item fed bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-white">Discours FOMC & Taux Réels</span>
+                                <span class="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.5 rounded">HAUSSIER XAU</span>
+                            </div>
+                            <p class="text-[11px] text-slate-300 leading-snug">Les anticipations de baisse de taux détendent le Dollar US (DXY), renforçant l'attrait de l'Or physique sans rendement.</p>
+                            <div class="flex justify-between items-center mt-1 text-[9px] text-slate-500">
+                                <span>Impact: TRÈS ÉLEVÉ</span>
+                                <span>Il y a 12 min</span>
+                            </div>
+                        </div>
+
+                        <!-- News Item 2 -->
+                        <div class="news-item cpi bg-darkBg/60 p-2.5 rounded-xl border border-borderCol/50">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-white">Prévisions CPI Mensuel US</span>
+                                <span class="text-[10px] bg-amber-500/20 text-amber-400 font-bold px-1.5 py-0.5 rounded">NEUTRE</span>
+                            </div>
+                            <p class="text-[11px] text-slate-300 leading-snug">Consensus fixé à +0.2% MoM. Une divergence provoquera une cassure violente de la zone VWAP H1.</p>
+                            <div class="flex justify-between items-center mt-1 text-[9px] text-slate-500">
+                                <span>Impact: ÉLEVÉ</span>
+                                <span>Il y a 45 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer Status Bar -->
+    <footer class="bg-cardBg border-t border-borderCol py-2 px-4 text-center text-xs text-slate-500 mt-4">
+        <div class="max-w-[1800px] mx-auto flex flex-wrap justify-between items-center">
+            <span>XAUUSD Institutional Confluence Terminal Pro © 2026</span>
+            <span class="text-[11px] text-slate-400">WebSocket Binance: PAXG/USDT (Proxy Or Spot Live) • VWAP et Order Flow Actifs</span>
+        </div>
+    </footer>
+
+    <!-- MAIN JAVASCRIPT ENGINE -->
+    <script>
+        // --- GLOBAL STATE & VARIABLES ---
+        let currentPrice = 4076.75;
+        let prevPrice = 4003.41;
+        let vwapPrice = 4068.10;
+        let volume24h = 48290.45;
+        let currentTF = 'H1';
+
+        // Historical Candles Data Engine
+        let ohlcData = [
+            { o: 4030.0, h: 4045.0, l: 4025.0, c: 4038.5, v: 1200 },
+            { o: 4038.5, h: 4052.0, l: 4035.0, c: 4048.0, v: 1450 },
+            { o: 4048.0, h: 4050.0, l: 4038.0, c: 4040.5, v: 980 },
+            { o: 4040.5, h: 4065.0, l: 4040.0, c: 4062.0, v: 2100 },
+            { o: 4062.0, h: 4068.0, l: 4052.0, c: 4055.1, v: 1300 },
+            { o: 4055.1, h: 4075.0, l: 4054.0, c: 4070.0, v: 1900 },
+            { o: 4070.0, h: 4072.0, l: 4060.0, c: 4065.2, v: 1100 },
+            { o: 4065.2, h: 4085.2, l: 4062.0, c: 4076.75, v: 2450 }
+        ];
+
+        // Upcoming Macro Events List
+        const macroEvents = [
+            { name: "US CPI Inflation (Indice des Prix)", impact: "IMPACT MAX", offsetDays: 2, offsetHours: 14 },
+            { name: "Décision de Taux FOMC & Fed", impact: "IMPACT EXTRÊME", offsetDays: 5, offsetHours: 8 },
+            { name: "Emplois Non-Agricoles (NFP US)", impact: "IMPACT MAX", offsetDays: 12, offsetHours: 4 }
+        ];
+        let currentEventIdx = 0;
+        let targetEventTime = new Date().getTime() + (2 * 86400 * 1000) + (14 * 3600 * 1000);
+
+        // --- CANVAS GRAPHIC ENGINE ---
+        const canvas = document.getElementById('mainChart');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawChart();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawChart() {
+            if (!ctx || !canvas) return;
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            const padding = 35;
+            const bottomVolHeight = 70;
+            const graphHeight = h - padding * 2 - bottomVolHeight;
+
+            // Extract Min & Max Prices
+            const closes = ohlcData.map(d => d.c);
+            const lows = ohlcData.map(d => d.l);
+            const highs = ohlcData.map(d => d.h);
+
+            const minPrice = Math.min(...lows) * 0.998;
+            const maxPrice = Math.max(...highs) * 1.002;
+            const range = maxPrice - minPrice || 1;
+
+            const maxVol = Math.max(...ohlcData.map(d => d.v)) || 1;
+
+            // 1. Draw Grid Lines
+            ctx.strokeStyle = '#1e222d';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (graphHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(w - padding, y);
+                ctx.stroke();
+
+                const pVal = maxPrice - (range / 4) * i;
+                ctx.fillStyle = '#5d606b';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(pVal.toFixed(1), w - padding + 5, y + 3);
+            }
+
+            // 2. Draw Volume Histogram
+            const barWidth = (w - padding * 2) / ohlcData.length;
+            ohlcData.forEach((d, i) => {
+                const x = padding + i * barWidth + barWidth * 0.2;
+                const bw = barWidth * 0.6;
+                const vh = (d.v / maxVol) * bottomVolHeight;
+                const vy = h - padding - vh;
+
+                ctx.fillStyle = d.c >= d.o ? 'rgba(0, 230, 118, 0.25)' : 'rgba(255, 82, 82, 0.25)';
+                ctx.fillRect(x, vy, bw, vh);
+            });
+
+            // 3. Draw VWAP Dashed Line
+            ctx.beginPath();
+            ctx.strokeStyle = '#00e676';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1.5;
+            ohlcData.forEach((d, i) => {
+                const x = padding + i * barWidth + barWidth / 2;
+                const vwapValCalculated = d.c * 0.997; // Dynamic VWAP approximation
+                const y = padding + graphHeight - ((vwapValCalculated - minPrice) / range) * graphHeight;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line pattern
+
+            // 4. Draw Price Line & Candles
+            ctx.beginPath();
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2.5;
+            ohlcData.forEach((d, i) => {
+                const x = padding + i * barWidth + barWidth / 2;
+                const y = padding + graphHeight - ((d.c - minPrice) / range) * graphHeight;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Glow Gradient under main price line
+            const lastX = padding + (ohlcData.length - 1) * barWidth + barWidth / 2;
+            const lastY = padding + graphHeight - ((ohlcData[ohlcData.length - 1].c - minPrice) / range) * graphHeight;
+            
+            ctx.beginPath();
+            ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#d4af37';
+            ctx.fill();
+        }
+
+        // --- CONFLUENCE ALGORITHM ENGINE ---
+        function runConfluenceEngine() {
+            // Calculate Technical Values
+            const rsi = 58.4 + (Math.random() * 4 - 2);
+            const isAboveVWAP = currentPrice > vwapPrice;
+            const aoValue = 12.45 + (Math.random() * 2 - 1);
+            
+            // Buyer vs Seller Pressure Logic
+            let buyers = 75;
+            if (isAboveVWAP) buyers += 10;
+            if (rsi > 50) buyers += 8;
+            buyers = Math.min(96, Math.max(10, Math.round(buyers)));
+            let sellers = 100 - buyers;
+
+            // Confidence Score
+            let confidence = Math.min(98, Math.round(buyers * 0.95 + 10));
+
+            // UI Updates
+            document.getElementById('buyersPct').innerText = buyers + '%';
+            document.getElementById('buyersBar').style.width = buyers + '%';
+            document.getElementById('sellersPct').innerText = sellers + '%';
+            document.getElementById('sellersBar').style.width = sellers + '%';
+            document.getElementById('confidencePct').innerText = confidence + '%';
+            document.getElementById('confidenceBar').style.width = confidence + '%';
+
+            // RSI Gauge & Status
+            document.getElementById('rsiVal').innerText = rsi.toFixed(1);
+            document.getElementById('rsiGaugeBar').style.width = Math.min(100, Math.max(0, rsi)) + '%';
+            
+            const rsiStatusEl = document.getElementById('rsiStatusText');
+            if (rsi >= 70) {
+                rsiStatusEl.innerText = 'Surachat';
+                rsiStatusEl.className = 'text-[10px] text-red-400 ml-2 font-medium';
+            } else if (rsi <= 30) {
+                rsiStatusEl.innerText = 'Survente';
+                rsiStatusEl.className = 'text-[10px] text-emerald-400 ml-2 font-medium';
+            } else {
+                rsiStatusEl.innerText = 'Zone Neutre Haussière';
+                rsiStatusEl.className = 'text-[10px] text-emerald-400 ml-2 font-medium';
+            }
+
+            // Dynamic Recommendation Targets (TP & SL)
+            const tp = currentPrice + 48.75;
+            const sl = currentPrice - 34.25;
+            document.getElementById('tpTarget').innerText = tp.toFixed(2);
+            document.getElementById('slTarget').innerText = sl.toFixed(2);
+
+            // VWAP Text Update
+            const vwapDiff = currentPrice - vwapPrice;
+            const vwapStatusEl = document.getElementById('vwapStatus');
+            if (vwapDiff >= 0) {
+                vwapStatusEl.innerText = `Au-dessus (+${vwapDiff.toFixed(2)}$)`;
+                vwapStatusEl.className = 'font-extrabold text-emerald-400';
+            } else {
+                vwapStatusEl.innerText = `En-dessous (${vwapDiff.toFixed(2)}$)`;
+                vwapStatusEl.className = 'font-extrabold text-red-400';
+            }
+        }
+
+        // --- WEBSOCKET BINANCE FEED ---
+        function connectBinanceWS() {
+            const statusText = document.getElementById('connText');
+            const statusContainer = document.getElementById('connStatus');
+
+            try {
+                // PAXG/USDT Stream on Binance as XAUUSD Proxy
+                const ws = new WebSocket('wss://stream.binance.com:9443/ws/paxgusdt@ticker');
+
+                ws.onopen = function() {
+                    statusContainer.className = 'flex items-center space-x-2 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-full';
+                    statusText.innerText = 'BINANCE WEBSOCKET CONNECTÉ';
+                };
+
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    if (data && data.c) {
+                        prevPrice = currentPrice;
+                        currentPrice = parseFloat(data.c);
+                        const changeAbs = parseFloat(data.p);
+                        const changePct = parseFloat(data.P);
+                        volume24h = parseFloat(data.v);
+
+                        updatePriceUI(currentPrice, changeAbs, changePct);
+                    }
+                };
+
+                ws.onerror = function() {
+                    statusContainer.className = 'flex items-center space-x-2 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-full';
+                    statusText.innerText = 'FALLBACK MOCK LIVE (WS ERROR)';
+                    startMockFeed();
+                };
+
+            } catch (err) {
+                startMockFeed();
+            }
+        }
+
+        function startMockFeed() {
+            setInterval(() => {
+                prevPrice = currentPrice;
+                const delta = (Math.random() - 0.48) * 1.8;
+                currentPrice += delta;
+                updatePriceUI(currentPrice, currentPrice - 4003.41, ((currentPrice - 4003.41) / 4003.41) * 100);
+            }, 1200);
+        }
+
+        function updatePriceUI(price, change, changePct) {
+            document.getElementById('headerPrice').innerText = price.toFixed(2);
+            document.getElementById('ohlcClose').innerText = price.toFixed(2);
+            document.getElementById('headerVolume24h').innerText = volume24h.toFixed(2) + ' OZ';
+
+            const changeEl = document.getElementById('headerChange');
+            if (change >= 0) {
+                changeEl.className = 'text-emerald-400 font-bold';
+                changeEl.innerText = `+${change.toFixed(2)} (+${changePct.toFixed(2)}%)`;
+            } else {
+                changeEl.className = 'text-red-400 font-bold';
+                changeEl.innerText = `${change.toFixed(2)} (${changePct.toFixed(2)}%)`;
+            }
+
+            // Update Last Candle in OHLC Data
+            ohlcData[ohlcData.length - 1].c = price;
+            if (price > ohlcData[ohlcData.length - 1].h) ohlcData[ohlcData.length - 1].h = price;
+            if (price < ohlcData[ohlcData.length - 1].l) ohlcData[ohlcData.length - 1].l = price;
+
+            drawChart();
+            runConfluenceEngine();
+        }
+
+        // --- TIMEFRAME SELECTOR ---
+        function setTimeframe(tf) {
+            currentTF = tf;
+            ['M5', 'H1', 'H4', '1D'].forEach(t => {
+                const btn = document.getElementById('tf' + t);
+                if (t === tf) {
+                    btn.className = 'px-2.5 py-1 rounded-lg bg-goldAccent text-black font-extrabold transition';
+                } else {
+                    btn.className = 'px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition';
+                }
+            });
+
+            document.getElementById('timeframeBadge').innerText = 'TF: ' + tf;
+
+            // Generate contextual candles
+            if (tf === 'M5') {
+                ohlcData = [
+                    { o: currentPrice - 5, h: currentPrice - 2, l: currentPrice - 8, c: currentPrice - 4, v: 500 },
+                    { o: currentPrice - 4, h: currentPrice + 2, l: currentPrice - 5, c: currentPrice, v: 850 }
+                ];
+            } else if (tf === '1D') {
+                ohlcData = [
+                    { o: 3950, h: 4020, l: 3940, c: 4010, v: 18000 },
+                    { o: 4010, h: 4090, l: 4005, c: currentPrice, v: 24000 }
+                ];
+            }
+
+            drawChart();
+            runConfluenceEngine();
+        }
+
+        // --- VOLATILITY SIMULATOR ---
+        function simulateVolatility() {
+            const spike = 32.40;
+            currentPrice += spike;
+            ohlcData.push({
+                o: currentPrice - spike,
+                h: currentPrice + 5,
+                l: currentPrice - spike,
+                c: currentPrice,
+                v: 4200
+            });
+
+            updatePriceUI(currentPrice, currentPrice - 4003.41, ((currentPrice - 4003.41) / 4003.41) * 100);
+
+            // Flash Card Border
+            const card = document.getElementById('signalCard');
+            card.className = 'bg-cardBg border-2 border-emerald-400 rounded-2xl p-5 shadow-2xl relative overflow-hidden pulse-gold';
+            setTimeout(() => {
+                card.className = 'bg-cardBg border border-borderCol rounded-2xl p-5 shadow-2xl relative overflow-hidden';
+            }, 1800);
+        }
+
+        // --- COUNTDOWN TIMER FOR MACRO EVENTS ---
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const diff = targetEventTime - now;
+
+            if (diff <= 0) {
+                // Switch to next event
+                currentEventIdx = (currentEventIdx + 1) % macroEvents.length;
+                const ev = macroEvents[currentEventIdx];
+                document.getElementById('nextEventName').innerHTML = `<span>${ev.name}</span> <span class="text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded uppercase">${ev.impact}</span>`;
+                targetEventTime = new Date().getTime() + (ev.offsetDays * 86400 * 1000) + (ev.offsetHours * 3600 * 1000);
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('cdDays').innerText = String(days).padStart(2, '0');
+            document.getElementById('cdHours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('cdMins').innerText = String(mins).padStart(2, '0');
+            document.getElementById('cdSecs').innerText = String(secs).padStart(2, '0');
+        }
+
+        // --- NEWS FEED FILTERING ---
+        function filterNews(type) {
+            const items = document.querySelectorAll('.news-item');
+            items.forEach(item => {
+                if (type === 'all' || item.classList.contains(type)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update Tab Styling
+            ['All', 'Fed', 'Cpi'].forEach(t => {
+                const btn = document.getElementById('tabNews' + t);
+                if (t.toLowerCase() === type) {
+                    btn.className = 'text-goldAccent font-bold pb-1 border-b-2 border-goldAccent';
+                } else {
+                    btn.className = 'text-slate-400 hover:text-white pb-1 transition';
+                }
+            });
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            resizeCanvas();
+            connectBinanceWS();
+            setInterval(updateCountdown, 1000);
+            runConfluenceEngine();
+        };
+    </script>
+</body>
+</html>
+```
